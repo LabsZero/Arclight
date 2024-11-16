@@ -16,8 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.LevelReader;
 import net.neoforged.neoforge.common.extensions.IItemStackExtension;
-import org.bukkit.craftbukkit.v1_21_R1.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v1_21_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -32,14 +32,14 @@ import java.util.function.Consumer;
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin_NeoForge implements ItemStackBridge, IItemStackExtension {
 
-     // @formatter:off
+    // @formatter:off
     @Mutable @Shadow @Deprecated @Nullable private Item item;
     @Shadow private int count;
     // @formatter:on
 
 
     @Decorate(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity.LivingEntity;Ljava/util.function.Consumer;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper.processDurabilityChange(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item.ItemStack;I)I"))
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper.processDurabilityChange(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item.ItemStack;I)I"))
     private int arclight$itemDamage(ServerLevel serverLevel, ItemStack itemStack, int i, @Local(ordinal = 0) LivingEntity damager) throws Throwable {
         // Ensure the itemStack is not null
         if (itemStack == null) {
@@ -62,16 +62,18 @@ public abstract class ItemStackMixin_NeoForge implements ItemStackBridge, IItemS
         return result;
     }
 
-    @Inject(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity.LivingEntity;Ljava/util.function/Consumer;)V",
-            at = @At(value = "INVOKE", target = "Ljava/util.function.Consumer.accept(Ljava.lang.Object;)V"))
-    private void arclight$itemBreak(int amount, ServerLevel level, @Nullable LivingEntity livingEntity, Consumer<Item> onBroken, CallbackInfo ci) {
+    @Inject(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V"))
+    private void arclight$itemBreak(int amount, ServerLevel level, @org.jetbrains.annotations.Nullable LivingEntity livingEntity, Consumer<Item> onBroken, CallbackInfo ci) {
         if (this.count == 1 && livingEntity instanceof ServerPlayer serverPlayer) {
-            CraftEventFactory.callPlayerItemBreakEvent(serverPlayer, CraftItemStack.asCraftMirror((ItemStack) (Object) this));
+            CraftEventFactory.callPlayerItemBreakEvent(serverPlayer, (ItemStack) (Object) this);
         }
     }
 
     @Deprecated
-    public void setItem(Item item) {
+    public void setItem(@Nullable Item item) {
+        if (item == null) {
+            return;
+        }
         this.item = item;
     }
 
